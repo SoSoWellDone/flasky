@@ -67,11 +67,11 @@ def show_time():
     return render_template('time.html', current_time=datetime.now(timezone.utc))
 
 
-@app.route('/forms/<nr>', methods=['GET', 'POST'])
-def forms(nr):
+@app.route('/forms', methods=['GET', 'POST'])
+def forms():
     name = None
     form = NameForm()
     if form.validate_on_submit():
         name = form.name.data
         form.name.data = ''
-    return render_template('forms.html', nr=nr, form=form, name=name)
+    return render_template('forms.html', form=form, name=name)
