@@ -526,6 +526,86 @@ class NameForm(FlaskForm):
         </p>
 
 
+        <h2>Obsługa formularzy w funkcjach widoku</h2>
+        <p>
+            W dekoratorze drugi parametr <em>methods</em> to lista obsługiwanych przez widok
+            metod. <em>form.validate_on_submit()</em> jest <em>True</em> jeśli ostatnim
+            żądaniem był <em>POST</em> (w formularzu <em>form</em> został naciśnięty przycisk
+            <em>Wyślij</em>)
+<pre><i><u>file: hello.py</u></i>
+@app.route('/forms', methods=['GET', 'POST'])
+def forms():
+    name = None
+    form = NameForm()
+    if form.validate_on_submit():  # Czy POST?
+        name = form.name.data
+        form.name.data = ''  # puste pole formularza
+    return render_template('forms.html', form=form, name=name)
+</pre>
+        <em>form.name.data</em> przechowuje dane wpisane w formularzu.
+        </p>
+
+
+        <h2>Przekierowania i sesja użytkownika</h2>
+        <p>
+            Wzorzec projektowy <strong>Post/Redirect/Get</strong> &mdash;
+            unikanie ponownego wysyłania formularza metodą POST, np. w wyniku
+            odświerzenia strony oraz przenoszenie danych sesji po zakończeniu
+            obsługi żądania <em>POST</em> w wyniku przekierowania.
+<pre><i><u>file: hello.py</u></i>
+from flask import session, redirect, url_for
+app.route('/forms2', methods=['GET', 'POST'])
+def forms2():
+    form = NameForm()
+    if form.validate_on_submit():  # Czy POST?
+        session['name'] = form.name.data
+        return redirect(url_for('forms2'))
+    return render_template('forms.html', form=form, name=session.get('name'))
+</pre>
+
+        </p>
+
+
+        <h2>Wyświetlanie komunikatów</h2>
+        <p>
+            Flask udostępnia funkcję <em>flash()</em>, która zbiera komunikaty
+<pre><i><u>file: hello.py</u></i>
+from flask import session, redirect, url_for, flash
+@app.route('/forms3', methods=['GET', 'POST'])
+def forms3():
+    form = NameForm()
+    if form.validate_on_submit():  # Czy POST?
+        old_name = session.get('name')
+        if old_name is not None and old_name != form.name.data:
+            flash('Wygląda na to, że teraz nazywasz się inaczej!')
+        session['name'] = form.name.data
+        return redirect(url_for('forms3'))
+    return render_template('forms.html', form=form, name=session.get('name'))
+</pre>
+        </p>
+        <p>
+            Następnie w szablonie można odczytać te komunikaty przez metodę
+            <em>get_flashed_messages()</em>
+<pre><i><u>file: templates/base.html</u></i>
+{% block content %}
+&lt;div class="container"&gt;
+    {% for message in get_flashed_messages() %}
+    &lt;div class="alert alert-warning"&gt;
+        &lt;button type="button" class="close" data-dismiss="alert"&gt;&times;&lt;/button&gt;
+        {{ message }}
+    &lt;/div&gt;
+    {% endfor %}
+
+    {% block page_content %}{% endblock %}
+&lt;/div&gt;
+{% endblock %}
+</pre>
+            Wiadomości pobrane przez metodę <em>get_flashed_messages()</em> nie zostaną
+            zwrócone przy następnym wywołaniu tej funkcji, więc wyskakujące komunikaty
+            pojawią się raz, a następnie są niewyświetlane.
+        </p>
+
+
     </article>
 </body>
 </html>

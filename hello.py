@@ -1,8 +1,20 @@
-from flask import Flask
-from flask import request, render_template
+from datetime import (
+    datetime,
+    timezone,
+)
+
+from flask import (
+    Flask,
+    request,
+    render_template,
+    session,
+    redirect,
+    url_for,
+    flash
+)
+
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
-from datetime import datetime, timezone
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
@@ -71,7 +83,29 @@ def show_time():
 def forms():
     name = None
     form = NameForm()
-    if form.validate_on_submit():
+    if form.validate_on_submit():  # Czy POST?
         name = form.name.data
-        form.name.data = ''
+        form.name.data = ''  # puste pole formularza
     return render_template('forms.html', form=form, name=name)
+
+
+@app.route('/forms2', methods=['GET', 'POST'])
+def forms2():
+    form = NameForm()
+    if form.validate_on_submit():  # Czy POST?
+        session['name'] = form.name.data
+        return redirect(url_for('forms2'))
+    return render_template('forms.html', form=form, name=session.get('name'))
+
+
+@app.route('/forms3', methods=['GET', 'POST'])
+def forms3():
+    form = NameForm()
+    if form.validate_on_submit():  # Czy POST?
+        old_name = session.get('name')
+        if old_name is not None and old_name != form.name.data:
+            flash('Wygląda na to, że teraz nazywasz się inaczej!')
+        session['name'] = form.name.data
+        return redirect(url_for('forms3'))
+    return render_template('forms.html', form=form, name=session.get('name'))
+
