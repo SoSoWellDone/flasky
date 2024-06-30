@@ -2,11 +2,21 @@ from flask import Flask
 from flask import request, render_template
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
-from datetime import datetime, UTC
+from datetime import datetime, timezone
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
+
 
 app = Flask(__name__)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
+app.config['SECRET_KEY'] = 'trudny do odgadnięcia ciąg znaków?'
+
+
+class NameForm(FlaskForm):
+    name = StringField('Jak masz na imię?', validators=[DataRequired()])
+    submit = SubmitField('Wyślij')
 
 
 @app.route('/')
@@ -54,4 +64,14 @@ def internal_server_error(e):
 
 @app.route('/time')
 def show_time():
-    return render_template('time.html', current_time=datetime.now(UTC))
+    return render_template('time.html', current_time=datetime.now(timezone.utc))
+
+
+@app.route('/forms/<nr>', methods=['GET', 'POST'])
+def forms(nr):
+    name = None
+    form = NameForm()
+    if form.validate_on_submit():
+        name = form.name.data
+        form.name.data = ''
+    return render_template('forms.html', nr=nr, form=form, name=name)

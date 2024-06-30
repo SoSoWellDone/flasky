@@ -1,0 +1,62 @@
+{% if nr == '1' %}
+
+    <h1>Formularze html</h1>
+    <h2>StringField, SubmitField</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.name.label }} {{ form.name() }}
+        {{ form.submit() }}
+    </form>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.name.label }} {{ form.name(id='my-text-field') }}
+        {{ form.submit() }}
+    </form>
+
+{% elif nr == '2' %}
+
+    {% extends "base.html" %}
+
+    {% block title %}Formularze HTML{% endblock %}
+
+    {% block content %}
+    <div class="container">
+        <div class="page-header">
+            <h1>Formularze html</h1>
+            <h2>StringField, SubmitField</h2>
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                {{ form.name.label }} {{ form.name() }}
+                {{ form.submit() }}
+            </form>
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                {{ form.name.label }} {{ form.name(id='my-text-field') }}
+                {{ form.submit() }}
+            </form>
+        </div>
+    </div>
+    {% endblock %}
+
+{% elif nr == '3' %}
+
+    {% import "bootstrap/wtf.html" as wtf %}
+    {{ wtf.quick_form(form) }}
+
+{% elif nr == '4' %}
+
+    {% extends "base.html" %}
+    {% import "bootstrap/wtf.html" as wtf %}
+
+    {% block page_content %}
+    <div class="page-header">
+        <h1>Witaj, {% if name %}{{ name }}{% else %}nieznajomy{% endif %}!</h1>
+    </div>
+    {{ wtf.quick_form(form) }}
+    {% endblock %}
+
+{% else %}
+
+    <p>{{ nr }}</p>
+
+{% endif %}

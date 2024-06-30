@@ -458,6 +458,75 @@ def show_time():
         </p>
 
     </article>
+
+    <article>
+        <h1>Formularze internetowe</h1>
+        <p>
+            <a href="https://en.wikipedia.org/wiki/HTML_form">
+                https://en.wikipedia.org/wiki/HTML_form
+            </a><br>
+            <a href="https://flask-wtf.readthedocs.io/en/1.2.x/">
+                https://flask-wtf.readthedocs.io/en/1.2.x/
+            </a><br>
+            <a href="https://wtforms.readthedocs.io/en/3.1.x/">
+                https://wtforms.readthedocs.io/en/3.1.x/
+            </a>
+        </p>
+
+
+        <h2>Konfiguracja</h2>
+        <p>
+            Instalacja Flask-WTF oraz jego zależności
+            <code>
+                (venv) $ pip install flask-wtf
+            </code>
+        </p>
+        <p>
+            Wymagany przez <em>Flask-WTF</em> tajny klucz
+<pre><i><u>file: hello.py</u></i>
+app.config['SECRET_KEY'] = 'trudny do odgadnięcia ciąg znaków'
+</pre>
+        Bardziej bezpieczne przechowywanie klucza
+        <a href="#Rozdział_7">Rozdział 7</a>
+        </p>
+
+
+        <h2>Klasy formularzy</h2>
+        <p>
+            Definicja klasy formularza
+<pre><i><u>file: hello.py</u></i>
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
+
+class NameForm(FlaskForm):
+    name = StringField('Jak masz na imię?', validators=[DataRequired()])
+    submit = SubmitField('Wyślij')
+</pre>
+        </p>
+
+
+        <h2>Renderowanie formularzy HTML</h2>
+        <p>
+            Prosty formularz
+<pre>
+&lt;form method="POST"&gt;
+    {{ form.hidden_tag() }}
+    {{ form.name.label }} {{ form.name() }}
+    {{ form.submit() }}
+&lt;/form&gt;
+</pre>
+        </p>
+        <p>
+            lub z pomocą Bootstrapa
+<pre>
+{% import "bootstrap/wtf.html" as wtf %}
+{{ wtf.quick_form(form) }}
+</pre>
+        </p>
+
+
+    </article>
 </body>
 </html>
 
