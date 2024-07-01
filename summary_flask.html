@@ -604,9 +604,148 @@ def forms3():
             zwrócone przy następnym wywołaniu tej funkcji, więc wyskakujące komunikaty
             pojawią się raz, a następnie są niewyświetlane.
         </p>
-
-
     </article>
+
+
+
+    <article>
+        <h1>Bazy danych</h1>
+        <p>
+            <a href="https://pl.wikipedia.org/wiki/ACID">
+                ACID
+            </a><br>
+            <a href="https://pl.wikipedia.org/wiki/Mapowanie_obiektowo-relacyjne">
+                ORM
+            </a><br>
+            <a href="https://flask-sqlalchemy.palletsprojects.com/en/3.1.x/">
+                flask-sqlalchemy
+            </a><br>
+            <a href="https://www.sqlalchemy.org/">
+                https://www.sqlalchemy.org/
+            </a>
+        </p>
+
+        <h2>Zarządzanie bazą danych za pomocą Flask-SQLAlchemy</h2>
+        <p>
+            Instalacja w wirtualnym środowisku
+            <code>(venv) $ pip install flask-sqlalchemy</code>
+        </p>
+        <p>
+            Konfiguracja bazy danych
+<pre><i><u>file: hello.py</u></i>
+import os
+from flask_sqlalchemy import SQLAlchemy
+basedir = os.path.abspath(os.path.dirname(__file__))
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+</pre>
+        </p>
+
+        <h2>Definicja modelu</h2>
+        <p>
+<pre>
+class Role(db.Model):
+    __tablename__ = 'roles'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True)
+
+    def __repr__(self) -&gt; str:
+        return '&lt;Role %r&gt;' % self.name
+
+
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), unique=True, index=True)
+
+    def __repr__(self) -&gt; str:
+        return '&lt;User %r&gt;' % self.username
+</pre>
+        <em>__tablename__</em> &mdash; nazwa tabeli w bazie danych<br>
+        <em>id, name, username</em> &mdash; atrybuty modelu jako obiekty klasy<br>
+        <em>db.Column(typ_kolumny_db, opcje_konfiguracji)</em><br>
+        Flask-SQLAlchemy wymaga, aby wszystkie modele definiowały kolumnę
+        klucza głównego, która zazwyczaj otrzymuje nazwę <em>id</em>.
+        </p>
+
+        <h2>Relacje</h2>
+        <p>
+            Relacje w modelach baz danych na przykładzie relacji
+            <strong>1&rightarrow;N</strong>
+<pre>
+class Role(db.Model):
+    &hellip;
+    users = db.relationship('User', backref='role')
+
+class User(db.Model):
+    &hellip;
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
+</pre>
+        </p>
+
+        <h2>Operacje na bazach danych</h2>
+        <h3>Tworzenie tabel</h3>
+        <p>
+            Tworzenie bazy danych na podstawie klas modeli
+            <code>(venv) $ flask shell</code>
+            <code>&gt;&gt;&gt; from hello import db</code>
+            <code>&gt;&gt;&gt; db.create_all()</code>
+        </p>
+        <p>
+            Aktualizacja istniejące bazy, gdy nastąpi zmiana modeli.
+            Najpierw usuwamy wszystkie tabele, a potem odtwarzamy je
+            na nowo na podstawie subklas klasy <em>db.Model</em>
+            <code>&gt;&gt;&gt; db.drop_all()</code>
+            <code>&gt;&gt;&gt; db.create_all()</code>
+            Niestety ta metoda również usuwa wszystkie dane.
+        </p>
+        <h3>Wstawianie wierszy</h3>
+        <p>
+            Konstruktory modeli przyjmują wartości początkowe atrybutów modelu
+            jako argumenty słów kluczowych
+            <code>&gt;&gt;&gt; from hello import Role, User</code>
+            <code>&gt;&gt;&gt; admin_role = Role(name='Admin')</code>
+            <code>&gt;&gt;&gt; user_john = User(username='jan', role=admin_role)</code>
+            Atrybut <em>id</em> jest uzupełniany automatycznie, ale dopiero po
+            zapisaniu w bazie danych. Aby przygotować obiekty do zapisania w
+            bazie danych, należy je dodać do sesji
+            <code>&gt;&gt;&gt; db.session.add(admin_role)</code>
+            <code>&gt;&gt;&gt; db.session.add(user_john)</code>
+            lub bardziej zwięźle
+            <code>&gt;&gt;&gt; db.session.add_all([admin_role, user_john])</code>
+            Zapisać do bazy, to wydać polecenie
+            <code>&gt;&gt;&gt; db.session.commit()</code>
+            Cofanie sesji bazy danych
+            <code>&gt;&gt;&gt; db.session.rollback()</code>
+        </p>
+        <h3>Modyfikowanie wierszy</h3>
+        <p>
+            Metoda <em>session.add()</em> może być użyta do aktualizacji
+            modeli
+            <code>&gt;&gt;&gt; admin_role.name = 'Administrator'</code>
+            <code>&gt;&gt;&gt; db.session.add(admin_role)</code>
+            <code>&gt;&gt;&gt; db.session.commit()</code>
+        </p>
+        <h3>Usuwanie wierszy</h3>
+        <p>
+            Przykład usuwania roli <em>Moderator</em> z bazy danych
+            <code>&gt;&gt;&gt; db.session.delete(mod_role)</code>
+            <code>&gt;&gt;&gt; db.session.commit()</code>
+        </p>
+        <h3>Zapytanie o wiersze</h3>
+        <p>
+            W każdej klasie modelu istnieje obiekt zapytania <em>query</em>.
+            Metoda <em>all()</em> zwraca całą zawartość tabeli powiązanej z modelem
+            <code>&gt;&gt;&gt; Role.query.all()</code>
+            <code>&gt;&gt;&gt; User.query.all()</code>
+            Można filtrować wynik (wszyscy użytkownicy z rolą <em>Admin</em>)
+            <code>&gt;&gt;&gt; User.query.filter_by(role=admin_role).all()</code>
+            Przejrzenie kodu zapytania SQL, należy użyć konwersji obiektu
+            zapytania na ciąg znaków
+            <code>&gt;&gt;&gt; str(User.query.filter_by(role=user_role))</code>
+        </p>
 </body>
 </html>
 
